@@ -1,118 +1,136 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useState } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const App = () => {
+  const [productCart, setProductCart] = useState([
+    { id: 1, name: 'Product A', price: 19.99, quantity: 2 },
+    { id: 2, name: 'Product B', price: 29.99, quantity: 1 },
+    { id: 3, name: 'Product C', price: 9.99, quantity: 3 },
+  ]);
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const calculateTotal = (product) => {
+    return product.price * product.quantity;
   };
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+  const flatListData = productCart.map((item) => ({
+    id: item.id,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity,
+    total: calculateTotal(item),
+  }));
+
+  const getTotalItemCount = () => {
+    return productCart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const addItem = (productId) => {
+    setProductCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
+      )
+    );
+  };
+
+  const removeItem = (productId) => {
+    setProductCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === productId && item.quantity > 1
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
+      )
+    );
+  };
+
+  const renderItem = ({ item }) => (
+    <View style={styles.productItem}>
+      <Text>{item.name}</Text>
+      <Text>Price: ${item.price}</Text>
+      <Text>Quantity: {item.quantity}</Text>
+      <Text>Total: ${item.total.toFixed(2)}</Text>
+      <View style={styles.itemButtons}>
+        <TouchableOpacity onPress={() => addItem(item.id)}>
+          <Text style={styles.buttonText}>Add</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => removeItem(item.id)}>
+          <Text style={styles.buttonText}>Remove</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
-}
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Shopping Cart</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.headerText}>{getTotalItemCount()}</Text>
+        </View>
+      </View>
+
+      <FlatList
+        data={flatListData}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+      />
+      <TouchableOpacity
+        style={styles.checkoutButton} >
+        <Text style={styles.buttonText}>Checkout</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    backgroundColor: 'blue',
+    padding: 16,
   },
-  sectionDescription: {
+  title: {
+    fontSize: 20,
+    color: 'white',
+  },
+  headerText: {
+    fontSize: 20,
+    marginLeft: 8,
+    color: 'white',
+  },
+  productItem: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+  itemButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
     marginTop: 8,
+  },
+  buttonText: {
+    color: 'white',
+    padding: 10
+  },
+  checkoutButton: {
+    backgroundColor: 'blue',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginLeft:16,
+    marginRight:16,
+    marginBottom:16
+  },
+  checkoutButtonText: {
+    color: 'white',
     fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
+  }
 });
 
 export default App;
